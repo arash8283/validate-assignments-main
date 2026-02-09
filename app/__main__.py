@@ -1,15 +1,14 @@
 """Main entry for program"""
 
+import logging
 import sys
 
 from app.comp_source import SourceCompileError, comp_source
-from app.gen_report import ReportItem, ValidationStatus, ReportWriter
+from app.gen_report import ReportItem, ReportWriter, ValidationStatus
 from app.list_sources import list_sources
 from app.parse_solution import UnsupportedSolutionFormat, parse_solution
 from app.run_bin import NotSuccessfulExit, run_bin
 from app.solution_file.reader import read_solution
-
-import logging
 
 logger = logging.getLogger(__name__)
 
