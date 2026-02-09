@@ -2,6 +2,24 @@ import tempfile
 import uuid
 import zipfile
 from pathlib import Path
+from contextlib import asynccontextmanager
+
+from api.runner import run_validator
+from db.db import database, students
+from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await database.connect()
+    yield
+    await database.disconnect()
+
+
+app = FastAPI(title="Validate Assignments API", lifespan=lifespan)
+
 
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
