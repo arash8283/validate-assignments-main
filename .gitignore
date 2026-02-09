@@ -1,0 +1,11 @@
+.DS_Store
+.venv
+venv
+__pycache__
+.pytest_cache
+.env
+assets/*
+!.gitkeep
+
+# Generated Artifact
+Report.md

@@ -1,0 +1,32 @@
+
+services:
+  db:
+    image: mysql:8
+    container_name: validate_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: validate_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  web:
+    build: .
+    container_name: validate_api
+    environment:
+      DATABASE_URL: "mysql+mysqlconnector://user:password@db:3306/validate_db"
+      ASSETS_DIR: "/app/assets"
+      APP_NAME: "validate"
+      SOLUTION_JSON: "/app/assets/solution.json"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    volumes:
+      - ./assets:/app/assets
+
+volumes:
+  db_data:
