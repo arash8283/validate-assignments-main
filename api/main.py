@@ -2,26 +2,26 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import FileResponse, JSONResponse
 import tempfile
 import zipfile
-import os
 import uuid
 from pathlib import Path
-import asyncio
+from contextlib import asynccontextmanager
 
 from api.runner import run_validator
-from db.db import database, students, reports, ValidationStatusEnum
+from db.db import database, students
 from fastapi import FastAPI
 
 app = FastAPI()
 
-@app.on_event("startup")
-async def startup():
-    await database.connect()
 
-@app.on_event("shutdown")
-async def shutdown():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await database.connect()
+    yield
     await database.disconnect()
 
-app = FastAPI(title="Validate Assignments API")
+
+app = FastAPI(title="Validate Assignments API", lifespan=lifespan)
+
 
 @app.post("/validate")
 async def validate_assignment(
@@ -56,17 +56,19 @@ async def validate_assignment(
         media_type="text/markdown",
         filename="Report.md",
     )
+
+
 @app.get("/students", response_model=list[dict])
 async def get_students_status():
     query = students.select()
     rows = await database.fetch_all(query)
-    
+
     # تبدیل هر رکورد به دیکشنری ساده
     result = [
         {
             "student_id": row["student_id"],
             "last_status": row["last_status"],
-            "last_run": row["last_run"].isoformat()  # datetime -> string
+            "last_run": row["last_run"].isoformat(),  # datetime -> string
         }
         for row in rows
     ]
