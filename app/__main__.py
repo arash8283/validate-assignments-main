@@ -3,7 +3,7 @@
 import sys
 
 from app.comp_source import SourceCompileError, comp_source
-from app.gen_report import ReportItem, ValidationStatus, write_report_md
+from app.gen_report import ReportItem, ValidationStatus, ReportWriter
 from app.list_sources import list_sources
 from app.parse_solution import UnsupportedSolutionFormat, parse_solution
 from app.run_bin import NotSuccessfulExit, run_bin
@@ -54,7 +54,8 @@ async def main():
 
     logger.info("Generating Report.md...")
 
-    await write_report_md(report_record)
+    writer = ReportWriter(report_record)
+    await writer.markdown()
 
 
 if __name__ == "__main__":

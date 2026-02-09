@@ -1,10 +1,12 @@
 """Generate Markdown Report"""
 
-from enum import IntEnum
 import datetime
-from app.config import settings
-from aiofiles import open as aioopen
+from enum import IntEnum
 from pathlib import Path
+
+from aiofiles import open as aioopen
+
+from app.config import settings
 
 
 class ValidationStatus(IntEnum):
@@ -42,41 +44,48 @@ See: github.com/mahdi-farnia/validate-assignments
 """
 
 
-def gen_report_md(report: list[ReportItem]) -> str:
-    run_failed_runs: list[StudentId] = [
-        record[0] for record in report if record[1] == ValidationStatus.RUN_FAILED
-    ]
-    compilation_failed_runs: list[StudentId] = [
-        record[0]
-        for record in report
-        if record[1] == ValidationStatus.COMPILATION_FAILED
-    ]
-    invalid_output_runs: list[StudentId] = [
-        record[0] for record in report if record[1] == ValidationStatus.INVALID_OUTPUT
-    ]
-    successful_runs: list[StudentId] = [
-        record[0] for record in report if record[1] == ValidationStatus.SUCCEEDED
-    ]
+class ReportWriter:
+    _report_record: list[ReportItem]
 
-    output: str = f"""# Result For Run {datetime.datetime.now(datetime.timezone.utc)}
+    def __init__(self, report_record: list[ReportItem]) -> None:
+        self._report_record = report_record
 
-Summary:
-- Total Runs => {len(report)}
-- Successful Runs => {len(successful_runs)}
-- Failed Runs => {len(compilation_failed_runs) + len(run_failed_runs)}
-    + Compilation Failed Runs => {len(compilation_failed_runs)}
-    + Run Failed Runs => {len(run_failed_runs)}
-    + Invalid Output Runs => {len(invalid_output_runs)}
+    async def markdown(self):
+        async with aioopen(Path(settings.assets_dir) / settings.report_md, "w") as f:
+            await f.write(self._gen_report_md(self._report_record))
 
-{_generate_section("Successful Runs", successful_runs)}
-{_generate_section("Compilation Failed Runs", compilation_failed_runs)}
-{_generate_section("Run Failed Runs", run_failed_runs)}
-{_generate_section("Invalid Output Runs", invalid_output_runs)}
-{_generate_note()}"""
+    def _gen_report_md(self, report: list[ReportItem]) -> str:
+        run_failed_runs: list[StudentId] = [
+            record[0] for record in report if record[1] == ValidationStatus.RUN_FAILED
+        ]
+        compilation_failed_runs: list[StudentId] = [
+            record[0]
+            for record in report
+            if record[1] == ValidationStatus.COMPILATION_FAILED
+        ]
+        invalid_output_runs: list[StudentId] = [
+            record[0]
+            for record in report
+            if record[1] == ValidationStatus.INVALID_OUTPUT
+        ]
+        successful_runs: list[StudentId] = [
+            record[0] for record in report if record[1] == ValidationStatus.SUCCEEDED
+        ]
 
-    return output
+        output: str = f"""# Result For Run {datetime.datetime.now(datetime.timezone.utc)}
 
+    Summary:
+    - Total Runs => {len(report)}
+    - Successful Runs => {len(successful_runs)}
+    - Failed Runs => {len(compilation_failed_runs) + len(run_failed_runs)}
+        + Compilation Failed Runs => {len(compilation_failed_runs)}
+        + Run Failed Runs => {len(run_failed_runs)}
+        + Invalid Output Runs => {len(invalid_output_runs)}
 
-async def write_report_md(report_record: list[ReportItem]):
-    async with aioopen(Path(settings.assets_dir) / settings.report_md, "w") as f:
-        await f.write(gen_report_md(report_record))
+    {_generate_section("Successful Runs", successful_runs)}
+    {_generate_section("Compilation Failed Runs", compilation_failed_runs)}
+    {_generate_section("Run Failed Runs", run_failed_runs)}
+    {_generate_section("Invalid Output Runs", invalid_output_runs)}
+    {_generate_note()}"""
+
+        return output
