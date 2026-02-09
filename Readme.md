@@ -67,7 +67,7 @@ validate-assignments/
 
 Installation
 1. Clone the repository
-git clone https://github.com/mahdi-farnia/validate-assignments.git
+git clone https://github.com/arash8283/validate-assignments-main.git
 cd validate-assignments
 
 2. Create Python environment
