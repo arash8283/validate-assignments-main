@@ -13,7 +13,7 @@ from app.solution_file.reader import read_solution
 logger = logging.getLogger(__name__)
 
 
-async def main():
+async def main() -> list[ReportItem]:
     async with read_solution() as solution_src:
         try:
             solution = await parse_solution(solution_src)
@@ -55,6 +55,7 @@ async def main():
 
     writer = ReportWriter(report_record)
     await writer.markdown()
+    return report_record
 
 
 if __name__ == "__main__":

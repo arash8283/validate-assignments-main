@@ -7,7 +7,7 @@ from pathlib import Path
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 
-from api.runner import run_validator
+from api.runner import Runner
 from db.db import database, students
 
 app = FastAPI()
@@ -43,16 +43,15 @@ async def validate_assignment(
     with zipfile.ZipFile(zip_path) as z:
         z.extractall(assets_dir)
 
+    runner = Runner(assets_dir, solution_path)
     try:
-        report_path = await run_validator(
-            assets_dir=assets_dir,
-            solution_path=solution_path,
-        )
+        await runner.run()
+        await runner.save()
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
     return FileResponse(
-        report_path,
+        runner.report_path,
         media_type="text/markdown",
         filename="Report.md",
     )
